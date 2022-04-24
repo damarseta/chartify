@@ -8,12 +8,12 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
-	apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
-	v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
-	batch "k8s.io/client-go/pkg/apis/batch/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	storage "k8s.io/client-go/pkg/apis/storage/v1"
+	apps "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/autoscaling/v1"
+	batch "k8s.io/api/batch/v1"
+	apiv1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
+	storage "k8s.io/api/storage/v1"
 )
 
 func TestPodTemplate(t *testing.T) {
@@ -25,7 +25,7 @@ func TestPodTemplate(t *testing.T) {
 	template, values := podTemplate(pod)
 	expectedTemplate, err := ioutil.ReadFile("../testdata/pod/output/pod_chart.yaml")
 	assert.Nil(t, err)
-	assert.Equal(t, string(expectedTemplate), string(template))
+	assert.Equal(t, string(expectedTemplate), template)
 	valueChecker(t, "../testdata/pod/output/pod_value.yaml", values.value)
 }
 
@@ -201,7 +201,9 @@ func TestServiceTemplateWithClusterIP(t *testing.T) {
 func TestChartForVolume(t *testing.T) {
 	yamlFiles := ReadLocalFiles("../testdata/mix_objects/check_volume/input")
 	tmp, err := ioutil.TempDir(os.TempDir(), "test")
-	defer os.Remove(tmp)
+	defer func() {
+		_ = os.Remove(tmp)
+	}()
 	assert.Nil(t, err)
 	g := Generator{
 		ChartName: "test",
@@ -218,7 +220,9 @@ func TestChartForVolume(t *testing.T) {
 		expectedData, err := ioutil.ReadFile(filepath.Join("../testdata/mix_objects/check_volume/output", v.Name()))
 		assert.Equal(t, string(expectedData), string(acturalData))
 	}
-	os.Remove(chdir)
+	defer func() {
+		_ = os.Remove(chdir)
+	}()
 }
 
 func TestChartForMultipleContainer(t *testing.T) {

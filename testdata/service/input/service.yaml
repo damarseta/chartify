@@ -5,8 +5,6 @@ metadata:
   name: myapp
   namespace: default
   resourceVersion: "22654527"
-  selfLink: /api/v1/namespaces/default/services/myapp
-  uid: 2bbe0777-f748-11e6-aee4-124f2ed5f410
 spec:
   clusterIP: 10.0.82.240
   ports:

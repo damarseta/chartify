@@ -5,8 +5,6 @@ metadata:
   name: mypod
   namespace: default
   resourceVersion: "7558270"
-  selfLink: /api/v1/namespaces/default/pods/mypod
-  uid: eb5b307e-c112-11e6-aee4-124f2ed5f410
 spec:
   containers:
   - image: redis

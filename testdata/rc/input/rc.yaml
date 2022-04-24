@@ -8,8 +8,6 @@ metadata:
   name: nginx
   namespace: default
   resourceVersion: "117987"
-  selfLink: /api/v1/namespaces/default/replicationcontrollers/nginx
-  uid: 7f4e0dd7-f29d-11e6-8c0f-080027f8762e
 spec:
   replicas: 3
   selector:

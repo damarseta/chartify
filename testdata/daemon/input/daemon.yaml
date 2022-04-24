@@ -8,8 +8,6 @@ metadata:
   name: store-daemon
   namespace: default
   resourceVersion: "22669566"
-  selfLink: /apis/extensions/v1beta1/namespaces/default/daemonsets/store-daemon
-  uid: 2f360238-f74c-11e6-aee4-124f2ed5f410
 spec:
   selector:
     matchLabels:

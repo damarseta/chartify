@@ -8,8 +8,6 @@ metadata:
   name: pod
   namespace: default
   resourceVersion: "22830483"
-  selfLink: /api/v1/namespaces/default/pods/pod
-  uid: 9558029f-f775-11e6-aee4-124f2ed5f410
 spec:
   containers:
   - image: dockerfile/nginx

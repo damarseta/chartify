@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	appsv1 "k8s.io/api/apps/v1"
 	"log"
 	"reflect"
 	"regexp"
@@ -13,11 +14,11 @@ import (
 	"unicode"
 
 	"github.com/ghodss/yaml"
+	"helm.sh/helm/v3/pkg/chart"
+	v1 "k8s.io/api/autoscaling/v1"
+	apiv1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
-	v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/helm/pkg/proto/hapi/chart"
 )
 
 var PreserveName bool
@@ -75,7 +76,7 @@ func generateTemplateReplicaSetSpec(rsSpec extensions.ReplicaSetSpec, rsSpecStr 
 	return templateDeployment, value
 }
 
-func generateTemplateDeplymentSpec(dcSpec extensions.DeploymentSpec, dcSpecStr string, key string, value map[string]interface{}) (string, map[string]interface{}) {
+func generateTemplateDeplymentSpec(dcSpec appsv1.DeploymentSpec, dcSpecStr string, key string, value map[string]interface{}) (string, map[string]interface{}) {
 	templateDeployment := dcSpecStr
 	templateDeployment = updateIntParamAsStringInTemplate(templateDeployment, key, "replicas")
 	value["replicas"] = dcSpec.Replicas
@@ -139,7 +140,7 @@ func generateTemplateForPodSpec(podSpec apiv1.PodSpec, key string, value map[str
 	}
 
 	if len(podSpec.ImagePullSecrets) != 0 {
-		imagePullSecretsObj := []apiv1.LocalObjectReference{}
+		var imagePullSecretsObj []apiv1.LocalObjectReference
 
 		for _, imagePullSecrets := range podSpec.ImagePullSecrets {
 			value["imagePullSecrets"] = imagePullSecrets.Name
@@ -182,7 +183,7 @@ func generateTemplateForVolume(volumes []apiv1.Volume, key string, value map[str
 		ifCondition = ""
 		volumeMap := make(map[string]interface{}, 0)
 		volumeMap[Enabled] = true
-		vol := []apiv1.Volume{}
+		var vol []apiv1.Volume
 		vol = append(vol, volume)
 		if volume.PersistentVolumeClaim != nil {
 			ifCondition = buildIfConditionForVolume(volume.PersistentVolumeClaim.ClaimName)
@@ -196,7 +197,7 @@ func generateTemplateForVolume(volumes []apiv1.Volume, key string, value map[str
 		} else if volume.Secret != nil {
 			if checkIfNameExist(volume.Secret.SecretName, "Secret") {
 				volume.Secret.SecretName = fmt.Sprintf(`{{ template "fullname" . }}-%s`, volume.Secret.SecretName)
-			} //TODO add items
+			} // TODO add items
 		} else if volume.Glusterfs != nil {
 			ifCondition = buildIfConditionForVolume(volume.Name)
 			volumeMap[Path] = volume.Glusterfs.Path
@@ -221,15 +222,7 @@ func generateTemplateForVolume(volumes []apiv1.Volume, key string, value map[str
 			volumeMap[VolumeID] = volume.AWSElasticBlockStore.VolumeID
 			volume.AWSElasticBlockStore.VolumeID = VolumeTemplateForElement(volume.Name, VolumeID)
 			volume.AWSElasticBlockStore.FSType = VolumeTemplateForElement(volume.Name, FSType)
-		} else if volume.GitRepo != nil {
-			ifCondition = buildIfConditionForVolume(volume.Name)
-			volumeMap[Repository] = volume.GitRepo.Repository
-			volumeMap[Revision] = volume.GitRepo.Revision
-			volumeMap[Directory] = volume.GitRepo.Directory
-			volume.GitRepo.Revision = VolumeTemplateForElement(volume.Name, Revision)
-			volume.GitRepo.Repository = VolumeTemplateForElement(volume.Name, Repository)
-			volume.GitRepo.Directory = VolumeTemplateForElement(volume.Name, Directory)
-			persistence[volume.Name] = volumeMap
+
 		} else if volume.NFS != nil {
 			ifCondition = buildIfConditionForVolume(volume.Name)
 			volumeMap[Server] = volume.NFS.Server
@@ -302,7 +295,7 @@ func generateTemplateForVolume(volumes []apiv1.Volume, key string, value map[str
 			volume.Flocker.DatasetName = VolumeTemplateForElement(volume.Name, DatasetName)
 			persistence[volume.Name] = volumeMap
 		} else if volume.DownwardAPI != nil {
-			//TODO
+			// TODO
 		} else if volume.FC != nil {
 			ifCondition = buildIfConditionForVolume(volume.Name)
 			volumeMap[FSType] = volume.FC.FSType
@@ -319,10 +312,10 @@ func generateTemplateForVolume(volumes []apiv1.Volume, key string, value map[str
 			ifCondition = buildIfConditionForVolume(volume.Name)
 			volumeMap[DiskName] = volume.AzureDisk.DiskName
 			volumeMap[DataDiskURI] = volume.AzureDisk.DataDiskURI
-			//volumeMap[FSType] = volume.AzureDisk.FSType
+			// volumeMap[FSType] = volume.AzureDisk.FSType
 			volume.AzureDisk.DiskName = VolumeTemplateForElement(volume.Name, DiskName)
 			volume.AzureDisk.DataDiskURI = VolumeTemplateForElement(volume.Name, DataDiskURI)
-			//volume.AzureDisk.FSType = *string(VolumeTemplateForElement(volume.Name, "FSType"))
+			// volume.AzureDisk.FSType = *string(VolumeTemplateForElement(volume.Name, "FSType"))
 			persistence[volume.Name] = volumeMap
 		} else if volume.VsphereVolume != nil {
 			ifCondition = buildIfConditionForVolume(volume.Name)
@@ -418,7 +411,7 @@ func SaveChartfile(filename string, cf *chart.Metadata) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, out, 0755)
+	return ioutil.WriteFile(filename, out, 0o755)
 }
 
 func addContainerValue(key string, s1 string, s2 string) string {
@@ -485,8 +478,8 @@ func omitEmptyMap(mp map[string]interface{}, k string, v interface{}) {
 			if err := json.Unmarshal(data, &newMap); err != nil {
 				log.Fatal(err)
 			}
-			for k1, v1 := range newMap {
-				omitEmptyMap(newMap, k1, v1)
+			for k1, val1 := range newMap {
+				omitEmptyMap(newMap, k1, val1)
 			}
 			mp[k] = newMap
 		}
@@ -502,9 +495,7 @@ func omitEmptySlice(i []interface{}) []interface{} {
 			v = reflect.ValueOf(v).Elem()
 		}
 		if isEmptyValue(reflect.ValueOf(v)) {
-
 		} else if !reflect.ValueOf(v).IsValid() {
-
 		} else if reflect.ValueOf(v).Kind() == reflect.Map || reflect.ValueOf(v).Kind() == reflect.Struct {
 			data, err := json.Marshal(reflect.ValueOf(v).Interface())
 			if err != nil {
@@ -514,13 +505,13 @@ func omitEmptySlice(i []interface{}) []interface{} {
 			if err := json.Unmarshal(data, &newMap); err != nil {
 				log.Fatal(err)
 			}
-			for k1, v1 := range newMap {
-				omitEmptyMap(newMap, k1, v1)
+			for k1, val1 := range newMap {
+				omitEmptyMap(newMap, k1, val1)
 			}
 			z = append(z, newMap)
 		} else if reflect.ValueOf(v).Kind() == reflect.Slice {
-			v1 := omitEmptySlice(InterfaceToSlice(v))
-			z = append(z, v1)
+			val1 := omitEmptySlice(InterfaceToSlice(v))
+			z = append(z, val1)
 
 		} else {
 			z = append(z, v)
@@ -643,12 +634,12 @@ func generatePersistentVolumeClaimSpec(pvcspec apiv1.PersistentVolumeClaimSpec, 
 		pvcspec.VolumeName = fmt.Sprintf("{{.Values.%s.%s}}", key, VolumeName)
 	}
 	if len(pvcspec.AccessModes) != 0 {
-		value[AccessMode] = pvcspec.AccessModes[0] //TODO sauman (multiple access mode)
+		value[AccessMode] = pvcspec.AccessModes[0] // TODO sauman (multiple access mode)
 		pvcspec.AccessModes = nil
 		pvcspec.AccessModes = append(pvcspec.AccessModes, apiv1.PersistentVolumeAccessMode(fmt.Sprintf("{{.Values.%s.%s}}", key, AccessMode)))
 	}
 	if pvcspec.Resources.Requests != nil {
-		//TODO sauman
+		// TODO sauman
 	}
 	return pvcspec
 }
@@ -657,7 +648,7 @@ func generatePersistentVolumeSpec(spec apiv1.PersistentVolumeSpec, key string, v
 	value[ReclaimPolicy] = spec.PersistentVolumeReclaimPolicy
 	spec.PersistentVolumeReclaimPolicy = apiv1.PersistentVolumeReclaimPolicy(fmt.Sprintf("{{.Values.%s.%s}}", key, ReclaimPolicy))
 	if len(spec.AccessModes) != 0 {
-		value[AccessMode] = spec.AccessModes[0] //TODO sauman (multiple access mode)
+		value[AccessMode] = spec.AccessModes[0] // TODO sauman (multiple access mode)
 		spec.AccessModes = nil
 		spec.AccessModes = append(spec.AccessModes, apiv1.PersistentVolumeAccessMode(fmt.Sprintf("{{.Values.%s.%s}}", key, AccessMode)))
 	}

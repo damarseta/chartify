@@ -10,8 +10,6 @@ metadata:
   name: deployment-nginx
   namespace: default
   resourceVersion: "19097383"
-  selfLink: /apis/extensions/v1beta1/namespaces/default/deployments/deployment-nginx
-  uid: f7cc7b2e-f377-11e6-aee4-124f2ed5f410
 spec:
   replicas: 3
   selector:

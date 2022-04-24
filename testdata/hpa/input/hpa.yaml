@@ -5,8 +5,6 @@ metadata:
   name: stage-hermes-tickets-api
   namespace: hermes
   resourceVersion: "73286047"
-  selfLink: /apis/autoscaling/v1/namespaces/hermes/horizontalpodautoscalers/stage-hermes-tickets-api
-  uid: cbc5d01c-cf04-11e9-bd9d-00155d507107
 spec:
   maxReplicas: 3
   minReplicas: 1

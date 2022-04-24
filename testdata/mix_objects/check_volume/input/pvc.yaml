@@ -5,8 +5,6 @@ metadata:
   name: pvc
   namespace: default
   resourceVersion: "22831598"
-  selfLink: /api/v1/namespaces/default/persistentvolumeclaims/pvc
-  uid: dfeb7978-f775-11e6-aee4-124f2ed5f410
 spec:
   accessModes:
   - ReadWriteOnce

@@ -1,19 +1,29 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
 	"strings"
 
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/reference"
+	"k8s.io/kubernetes/pkg/scheduler/api"
+
 	"github.com/ghodss/yaml"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
-	apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
-	batch "k8s.io/client-go/pkg/apis/batch/v1"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+
+	//"k8s.io/client-go/pkg/api"
+	//"k8s.io/api"
+	corev1 "k8s.io/api/core/v1"
+	// corev1 "k8s.io/api/core/v1"
+	// apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
+	apps "k8s.io/api/apps/v1"
+	// batch "k8s.io/client-go/pkg/apis/batch/v1"
+	batch "k8s.io/api/batch/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -104,11 +114,11 @@ func (ko KubeObjects) getPods(kubeClient clientset.Interface) []string {
 	var yamlFiles []string
 	for _, v := range ko.Pods {
 		objectName, namespace := splitNamespace(v)
-		pod, err := kubeClient.CoreV1().Pods(namespace).Get(objectName, metav1.GetOptions{})
+		pod, err := kubeClient.CoreV1().Pods(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, pod)
+		ref, err := reference.GetReference(scheme.Scheme, pod)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -118,7 +128,7 @@ func (ko KubeObjects) getPods(kubeClient clientset.Interface) []string {
 		if pod.APIVersion == "" {
 			pod.APIVersion = ref.APIVersion
 		}
-		pod.Status = apiv1.PodStatus{}
+		pod.Status = corev1.PodStatus{}
 		dataByte, err := yaml.Marshal(pod)
 		if err != nil {
 			log.Fatal(err)
@@ -132,11 +142,11 @@ func (ko KubeObjects) getReplicationControllers(kubeClient clientset.Interface) 
 	var yamlFiles []string
 	for _, v := range ko.ReplicationControllers {
 		objectName, namespace := splitNamespace(v)
-		rc, err := kubeClient.CoreV1().ReplicationControllers(namespace).Get(objectName, metav1.GetOptions{})
+		rc, err := kubeClient.CoreV1().ReplicationControllers(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, rc)
+		ref, err := reference.GetReference(api.Scheme, rc)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -146,7 +156,7 @@ func (ko KubeObjects) getReplicationControllers(kubeClient clientset.Interface) 
 		if rc.APIVersion == "" {
 			rc.APIVersion = ref.APIVersion
 		}
-		rc.Status = apiv1.ReplicationControllerStatus{}
+		rc.Status = corev1.ReplicationControllerStatus{}
 		dataByte, err := yaml.Marshal(rc)
 		if err != nil {
 			log.Fatal(err)
@@ -158,13 +168,14 @@ func (ko KubeObjects) getReplicationControllers(kubeClient clientset.Interface) 
 
 func (ko KubeObjects) getServices(kubeClient clientset.Interface) []string {
 	var yamlFiles []string
+
 	for _, v := range ko.Services {
 		objectName, namespace := splitNamespace(v)
-		service, err := kubeClient.CoreV1().Services(namespace).Get(objectName, metav1.GetOptions{})
+		service, err := kubeClient.CoreV1().Services(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, service)
+		ref, err := reference.GetReference(api.Scheme, service)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -174,7 +185,7 @@ func (ko KubeObjects) getServices(kubeClient clientset.Interface) []string {
 		if service.APIVersion == "" {
 			service.APIVersion = ref.APIVersion
 		}
-		service.Status = apiv1.ServiceStatus{}
+		service.Status = corev1.ServiceStatus{}
 		dataByte, err := yaml.Marshal(service)
 		if err != nil {
 			log.Fatal(err)
@@ -188,11 +199,11 @@ func (ko KubeObjects) getSecrets(kubeClient clientset.Interface) []string {
 	var yamlFiles []string
 	for _, v := range ko.Secrets {
 		objectName, namespace := splitNamespace(v)
-		secret, err := kubeClient.CoreV1().Secrets(namespace).Get(objectName, metav1.GetOptions{})
+		secret, err := kubeClient.CoreV1().Secrets(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, secret)
+		ref, err := reference.GetReference(api.Scheme, secret)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -213,13 +224,14 @@ func (ko KubeObjects) getSecrets(kubeClient clientset.Interface) []string {
 
 func (ko KubeObjects) getConfigMaps(kubeClient clientset.Interface) []string {
 	var yamlFiles []string
+
 	for _, v := range ko.ConfigMaps {
 		objectName, namespace := splitNamespace(v)
-		configmap, err := kubeClient.CoreV1().ConfigMaps(namespace).Get(objectName, metav1.GetOptions{})
+		configmap, err := kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, configmap)
+		ref, err := reference.GetReference(api.Scheme, configmap)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -242,11 +254,11 @@ func (ko KubeObjects) getStatefulSets(kubeClient clientset.Interface) []string {
 	var yamlFiles []string
 	for _, v := range ko.StatefulSets {
 		objectName, namespace := splitNamespace(v)
-		statefulset, err := kubeClient.AppsV1beta1().StatefulSets(namespace).Get(objectName, metav1.GetOptions{})
+		statefulset, err := kubeClient.AppsV1().StatefulSets(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, statefulset)
+		ref, err := reference.GetReference(api.Scheme, statefulset)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -269,11 +281,11 @@ func (ko KubeObjects) getStatefulSets(kubeClient clientset.Interface) []string {
 func (ko KubeObjects) getPersistentVolumes(kubeClient clientset.Interface) []string {
 	var yamlFiles []string
 	for _, v := range ko.PersistentVolumes {
-		pv, err := kubeClient.CoreV1().PersistentVolumes().Get(v, metav1.GetOptions{})
+		pv, err := kubeClient.CoreV1().PersistentVolumes().Get(context.TODO(), v, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, pv)
+		ref, err := reference.GetReference(api.Scheme, pv)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -296,11 +308,11 @@ func (ko KubeObjects) getPersistentVolumeClaims(kubeClient clientset.Interface) 
 	var yamlFiles []string
 	for _, v := range ko.PersistentVolumeClaims {
 		objectName, namespace := splitNamespace(v)
-		pvc, err := kubeClient.CoreV1().PersistentVolumeClaims(namespace).Get(objectName, metav1.GetOptions{})
+		pvc, err := kubeClient.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, pvc)
+		ref, err := reference.GetReference(api.Scheme, pvc)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -323,11 +335,11 @@ func (ko KubeObjects) getJobs(kubeClient clientset.Interface) []string {
 	var jobFiles []string
 	for _, v := range ko.Jobs {
 		objectName, namespace := splitNamespace(v)
-		job, err := kubeClient.BatchV1().Jobs(namespace).Get(objectName, metav1.GetOptions{})
+		job, err := kubeClient.BatchV1().Jobs(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, job)
+		ref, err := reference.GetReference(api.Scheme, job)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -351,11 +363,11 @@ func (ko KubeObjects) getDaemons(kubeClient clientset.Interface) []string {
 	var daemonFiles []string
 	for _, v := range ko.Daemons {
 		objectName, namespace := splitNamespace(v)
-		daemon, err := kubeClient.ExtensionsV1beta1().DaemonSets(namespace).Get(objectName, metav1.GetOptions{})
+		daemon, err := kubeClient.ExtensionsV1beta1().DaemonSets(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, daemon)
+		ref, err := reference.GetReference(api.Scheme, daemon)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -380,11 +392,11 @@ func (ko KubeObjects) getDeployments(kubeClient clientset.Interface) []string {
 	var files []string
 	for _, v := range ko.Deployments {
 		objectName, namespace := splitNamespace(v)
-		deployment, err := kubeClient.ExtensionsV1beta1().Deployments(namespace).Get(objectName, metav1.GetOptions{})
+		deployment, err := kubeClient.ExtensionsV1beta1().Deployments(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, deployment)
+		ref, err := reference.GetReference(api.Scheme, deployment)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -409,11 +421,11 @@ func (ko KubeObjects) getReplicaSets(kubeClient clientset.Interface) []string {
 	var yamlFiles []string
 	for _, v := range ko.ReplicaSets {
 		objectName, namespace := splitNamespace(v)
-		rs, err := kubeClient.ExtensionsV1beta1().ReplicaSets(namespace).Get(objectName, metav1.GetOptions{})
+		rs, err := kubeClient.ExtensionsV1beta1().ReplicaSets(namespace).Get(context.TODO(), objectName, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, rs)
+		ref, err := reference.GetReference(api.Scheme, rs)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -436,12 +448,12 @@ func (ko KubeObjects) getReplicaSets(kubeClient clientset.Interface) []string {
 func (ko KubeObjects) getStorageClasses(kubeClient clientset.Interface) []string {
 	var storageFiles []string
 	for _, v := range ko.StorageClasses {
-		//objectsName, namespace := splitnamespace(v)
-		storageClass, err := kubeClient.StorageV1().StorageClasses().Get(v, metav1.GetOptions{})
+		// objectsName, namespace := splitnamespace(v)
+		storageClass, err := kubeClient.StorageV1().StorageClasses().Get(context.TODO(), v, metav1.GetOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
-		ref, err := apiv1.GetReference(api.Scheme, storageClass)
+		ref, err := reference.GetReference(api.Scheme, storageClass)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -460,7 +472,6 @@ func (ko KubeObjects) getStorageClasses(kubeClient clientset.Interface) []string
 	}
 
 	return storageFiles
-
 }
 
 func (ko KubeObjects) getHorizontalPodAutoscalers(kubeClient clientset.Interface) []string {
@@ -468,7 +479,7 @@ func (ko KubeObjects) getHorizontalPodAutoscalers(kubeClient clientset.Interface
 	for _, v := range ko.HorizontalPodAutoscalers {
 		_, namespace := splitNamespace(v)
 		horizontalPodAutoscaler := kubeClient.AutoscalingV1().HorizontalPodAutoscalers(namespace)
-		scaler, _ := horizontalPodAutoscaler.List(metav1.ListOptions{})
+		scaler, _ := horizontalPodAutoscaler.List(context.TODO(), metav1.ListOptions{})
 
 		for _, item := range scaler.Items {
 			if item.Kind == "" {
@@ -496,7 +507,7 @@ func newKubeClient() (clientset.Interface, error) {
 	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
 	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides).ClientConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Could not get kubernetes config: %s", err)
+		return nil, fmt.Errorf("could not get kubernetes config: %s", err)
 	}
 	return clientset.NewForConfig(config)
 }
@@ -513,7 +524,7 @@ func splitNamespace(s string) (string, string) {
 	if len(str) == 2 {
 		return str[0], str[1]
 	} else if len(str) == 1 {
-		return str[0], apiv1.NamespaceDefault
+		return str[0], corev1.NamespaceDefault
 	}
 	log.Fatal("ERROR : Can not detect Namespace")
 	return "", ""
@@ -522,7 +533,7 @@ func splitNamespace(s string) (string, string) {
 func makeAPIVersion(selfLink string) string {
 	str := strings.Split(selfLink, "/")
 	if len(str) > 2 {
-		return (str[2] + "/" + str[3])
+		return str[2] + "/" + str[3]
 	}
 	log.Fatal("api version not found")
 	return ""

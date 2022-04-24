@@ -9,8 +9,6 @@ metadata:
   name: frontend
   namespace: default
   resourceVersion: "22549529"
-  selfLink: /apis/extensions/v1beta1/namespaces/default/replicasets/frontend
-  uid: 09a447ec-f72c-11e6-aee4-124f2ed5f410
 spec:
   replicas: 3
   selector:

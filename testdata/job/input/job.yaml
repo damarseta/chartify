@@ -8,8 +8,6 @@ metadata:
   name: pi
   namespace: default
   resourceVersion: "22578774"
-  selfLink: /apis/extensions/v1beta1/namespaces/default/jobs/pi
-  uid: d2b46435-f733-11e6-aee4-124f2ed5f410
 spec:
   autoSelector: true
   completions: 1

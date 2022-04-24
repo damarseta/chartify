@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"kubepack.dev/chartify/pkg"
+	"go.damarseta.id/chartify/pkg"
 )
 
 func NewCmdCreate() *cobra.Command {
@@ -72,7 +72,7 @@ func checkLocation(location string) string {
 	fi, err := os.Stat(location)
 	if err != nil {
 		if os.IsNotExist(err) {
-			if err := os.Mkdir(location, 0755); err != nil {
+			if err := os.Mkdir(location, 0o755); err != nil {
 				log.Fatal(err)
 			}
 		}

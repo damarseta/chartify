@@ -8,5 +8,3 @@ metadata:
   name: special-config
   namespace: default
   resourceVersion: "22678229"
-  selfLink: /api/v1/namespaces/default/configmaps/special-config
-  uid: 77b7dcdb-f74e-11e6-aee4-124f2ed5f410

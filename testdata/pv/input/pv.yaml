@@ -4,8 +4,6 @@ metadata:
   creationTimestamp: 2017-02-20T09:53:50Z
   name: pv-test
   resourceVersion: "22693294"
-  selfLink: /api/v1/persistentvolumes/pv-test
-  uid: 7b2377f4-f752-11e6-aee4-124f2ed5f410
 spec:
   accessModes:
   - ReadWriteOnce

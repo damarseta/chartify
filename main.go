@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"kubepack.dev/chartify/pkg/cmd"
 	v "github.com/appscode/go/version"
 	"github.com/spf13/cobra"
+	"go.damarseta.id/chartify/pkg/cmd"
 )
 
 var (
@@ -24,6 +24,8 @@ var (
 )
 
 func init() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	v.Version.Version = Version
 	v.Version.VersionStrategy = VersionStrategy
 	v.Version.Os = Os

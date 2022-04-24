@@ -8,8 +8,6 @@ metadata:
   name: myclaim
   namespace: default
   resourceVersion: "22700859"
-  selfLink: /api/v1/namespaces/default/persistentvolumeclaims/myclaim
-  uid: 859dd87f-f754-11e6-aee4-124f2ed5f410
 spec:
   accessModes:
   - ReadWriteOnce
